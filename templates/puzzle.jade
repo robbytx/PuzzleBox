@@ -1,0 +1,15 @@
+extends base
+
+block content
+	h2= name
+
+	if failedAnswer
+		div No, that answer wasn't quite right...
+
+	block description
+
+	form(method="POST")
+		label Answer:
+		input(name="_csrf", type="hidden", value=token)
+		input(name="answer", type="text")
+		input(type="submit")

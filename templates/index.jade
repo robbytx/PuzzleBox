@@ -1,0 +1,15 @@
+extends base
+
+block content
+	h1 Test!
+
+	if user
+		h2 Welcome Back #{user.name}
+		p
+			a(href="/logout") Log Out
+		p
+			a(href="/puzzles") See da puzzles
+	else
+		h2 Y U NO LOGIN?
+		a(href="/auth/facebook") Login with Facebook
+		a(href="/auth/twitter") Login with Twitter

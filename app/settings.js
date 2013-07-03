@@ -8,7 +8,8 @@ module.exports = function (app) {
 	app.configure(function () {
 
 		// Set up views!
-		app.set("views", __dirname + "/templates");
+		app.set("view options", {layout: false});
+		app.set("views", "./templates");
 		app.set("view engine", "jade");
 
 		// Set up a bunch of misc inbound stuff, just know that it's important.
