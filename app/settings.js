@@ -52,7 +52,7 @@ module.exports = function (app) {
 		app.use(app.router);
 
 		// Set up static resources directory
-		app.use(express.static(__dirname + "/static/"));
+		app.use(express.static("./static/"));
 
 		// In case of 404, respond in the most appropriate way possible.
 		app.use(function(req, res, next){			
