@@ -2,7 +2,16 @@ extends base
 
 block content
 	h1 Puzzles!
-	ul
-		each puzzle in puzzles
-			li
-				a(href="/puzzles/" + puzzle.puzzid)= puzzle.name
+	if uncompleted.length
+		h2 Uncompleted Puzzles
+		ul
+			each puzzle in uncompleted
+				li
+					a(href="/puzzles/" + puzzle.puzzid)= puzzle.name
+
+	if completed.length
+		h2 Completed Puzzles
+		ul
+			each puzzle in completed
+				li
+					a(href="/puzzles/" + puzzle.puzzid)= puzzle.name

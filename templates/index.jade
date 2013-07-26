@@ -8,8 +8,9 @@ block content
 		p
 			a(href="/logout") Log Out
 		p
-			a(href="/puzzles") See da puzzles
+			a(href="/puzzles") See all puzzles
 	else
-		h3 
-		a(href="/auth/facebook") Login with Facebook
-		a(href="/auth/twitter") Login with Twitter
+		h3 Login with:
+		p.logins
+			a.btn(href="/auth/facebook") Facebook
+			a.btn(href="/auth/twitter") Twitter

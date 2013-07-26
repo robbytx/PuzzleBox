@@ -1,7 +1,21 @@
 var PuzzleMaster = require("../puzzlemaster");
 
 exports.renderIndex = function(req, res) {
-	res.render('puzzle_index', {puzzles: PuzzleMaster.puzzles});
+	var completed = [], uncompleted = [],
+		completions = req.user.getCompletions();
+
+	console.log(completions);
+
+	for (var i in PuzzleMaster.puzzles) {
+		console.log(PuzzleMaster.puzzles[i].puzzid, completions.indexOf(PuzzleMaster.puzzles[i].puzzid))
+		if (completions.indexOf(PuzzleMaster.puzzles[i].puzzid) > -1) {
+			completed.push(PuzzleMaster.puzzles[i]);
+		} else {
+			uncompleted.push(PuzzleMaster.puzzles[i]);
+		}
+	}
+
+	res.render('puzzle_index', {completed: completed, uncompleted: uncompleted});
 };
 
 exports.getPuzzle = function(req, res, next) {
@@ -25,7 +39,7 @@ exports.renderPuzzle = function(req, res) {
 }
 
 exports.checkPuzzle = function(req, res) {
-	if (req.puzzle.checkAnswer(req.user, req.body.answer)) {
+	if (PuzzleMaster.checkAnswer(req.puzzle, req.user, req.body.answer)) {
 		res.render("correct", {name: req.puzzle.name});
 	} else {
 		res.render("puzzles/" + req.params.puzzid, {
