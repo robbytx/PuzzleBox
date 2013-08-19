@@ -12,19 +12,17 @@ var PuzzleCompletionModel = mongoose.model("PuzzleCompletion")
 
 var User = new Schema({
 	name: String,
-	credential_type: String,
-	credential_id: String,	
+	email: String,
 	created: {type: Date, default: Date.now},
 	accessed: {type: Date, default: Date.now},
 	completions: [PuzzleCompletion]
 });
 
 // Find a user by given credential
-User.statics.findOrAddByCredential = function findByCredential (profile) {
+User.statics.findOrAddByEmail = function findOrAddByEmail (email) {
 	var query = {};
 
-	query["credential_id"] = profile.id;
-	query["credential_type"] = profile.provider;
+	query["email"] = email;
 
 	return this.pFindOne(query)(function(user) {
 		if (user) {
@@ -33,8 +31,7 @@ User.statics.findOrAddByCredential = function findByCredential (profile) {
 		} else {
 			user = new (mongoose.model('User'))();
 			user.name = profile.displayName;
-			user.credential_type = profile.provider;
-			user.credential_id = profile.id
+			user.email = email;
 			return user.pSave();
 		}
 	});
