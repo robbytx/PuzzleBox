@@ -1,8 +1,7 @@
-var passport = require('passport'),
-	FacebookStrategy = require('passport-facebook').Strategy,
-	TwitterStrategy = require('passport-twitter').Strategy,
-	GithubStrategy = require('passport-github').Strategy
-	mongoose = require('mongoose'),
+var mongoose = require('mongoose'),
+	crypto = require('crypto'),
+	AWS = require('aws-sdk'),
+	ses = new AWS.SES(),
 	User = mongoose.model('User');
 
 function authenticateUser(req, accessToken, refreshToken, profile, done) {
@@ -11,42 +10,7 @@ function authenticateUser(req, accessToken, refreshToken, profile, done) {
 	}).end();
 }
 
-passport.use(new FacebookStrategy({
-		clientID: process.env.FB_APP_ID,
-		clientSecret: process.env.FB_APP_SECRET,
-		callbackURL: process.env.HOST_PORT + "/auth/facebook/callback",
-		passReqToCallback: true
-	}, authenticateUser));
-
-passport.use(new TwitterStrategy({
-		consumerKey: process.env.TW_APP_KEY,
-		consumerSecret: process.env.TW_APP_SECRET,
-		callbackURL: process.env.HOST_PORT + "/auth/twitter/callback",
-		passReqToCallback: true
-	}, authenticateUser));
-
-//Places the user into the session
-passport.serializeUser(function(user, done) {
-	done(null, user.id);
-});
-
-//Retrieves the user from the session
-passport.deserializeUser(function(id, done) {
-	User.findById(id, function(err, user) {
-		if (err) { return done(err); }
-		done(null, user);
-	});
-});
-
-exports.catchRedirectArgs = function(req, res, next) {
-	var redirect = decodeURIComponent(req.param('redirect', ''));
-	if(redirect !== '') {
-		req.session.redirect = redirect;
-	} 
-	next();
-};
-
-exports.redirectAfterLogin = function(req, res) {
+exports.doLogin = function(req, res) {
 	var redirect = req.session.redirect;
 	if (req.session.redirect) {
 		delete req.session.redirect;
@@ -56,7 +20,44 @@ exports.redirectAfterLogin = function(req, res) {
 	res.redirect('/');
 };
 
+exports.sendLogin = function(req, res) {
+	var email = req.body.email,
+		token = crypto.createHmac('sha1', process.env.HASH_SECRET).update(email).digest('hex'),
+		loginLink = process.env.HOST_PORT + "/login?token=" + token;
+
+	var request = ses.sendEmail({
+		Source: "puzzles@nexus.bazaarvoice.com",
+		Destination: {
+			ToAddresses: [email]
+		},
+		Message: {
+			Subject: {
+				Data: "Bazaarvoice PuzzleBox Login"
+			},
+			Body: {
+				Text: {
+					Data: "Hello! You, or someone claiming to be you, wants to log in to the Bazaarvoice Puzzlebox with this email address.\n" + 
+						"Click the below link to log in. If this was not you, you can ignore this email.\n" +
+						loginLink
+				}
+			}
+		}
+
+	});
+	request.on('error', function(resp) {
+	  console.log("Error sending email: " + resp); // log the successful data response
+	});
+	request.on('success', function(resp) {
+	  console.log("Sent email " + resp.data); // log the successful data response
+	});
+	
+	request.send();
+	console.log("Sent email to " + email);
+
+	res.render("emailsent");
+}
+
 exports.logout = function (req, res) {
-	req.logout();
+
 	res.redirect('/');
 };

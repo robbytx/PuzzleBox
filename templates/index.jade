@@ -10,7 +10,10 @@ block content
 		p
 			a(href="/puzzles") See all puzzles
 	else
-		h3 Login with:
-		p.logins
-			a.btn(href="/auth/facebook") Facebook
-			a.btn(href="/auth/twitter") Twitter
+		h3 Enter your email address to log in
+		p We'll send you an email with your login information.
+		form(action="/send", method="POST")
+			input(name="_csrf", type="hidden", value=token)
+			label(for="email") Email Address:
+			input(name="email", type="text")
+			input(type="submit")

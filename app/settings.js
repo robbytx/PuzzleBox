@@ -1,5 +1,6 @@
 var express = require("express"),
 	dbs = require("./dbconnect"),
+	MongoStore = require('connect-mongo')(express),
 	passport = require("passport"),
 	csrf = express.csrf();
 
@@ -23,15 +24,11 @@ module.exports = function (app) {
 		app.use(express.session({ 
 			secret: process.env.CLIENT_SECRET || "bvpuzzlez",
 			maxAge: new Date(Date.now() + (1000 * 60 * 60 * 24)), //One day max session time, or anytime redis restarts.
-			store: dbs.redisStore
+			store: new MongoStore(dbs.conf)
 		}));
 		
 		// Let's try and avoid cross site attacks if we can...
 		app.use(csrf);
-
-		// Setup passport (actual auth schemes are set up as part of ./controllers/credential.js)
-		app.use(passport.initialize());
-		app.use(passport.session());
 
 		var isProduction = process.env.NODE_ENV === 'production';
 
