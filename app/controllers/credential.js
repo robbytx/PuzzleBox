@@ -4,25 +4,27 @@ var mongoose = require('mongoose'),
 	ses = new AWS.SES(),
 	User = mongoose.model('User');
 
-function authenticateUser(req, accessToken, refreshToken, profile, done) {
-	User.findOrAddByCredential(profile)(function(user){
-		done(null, user);
-	}).end();
-}
-
 exports.doLogin = function(req, res) {
-	var redirect = req.session.redirect;
-	if (req.session.redirect) {
-		delete req.session.redirect;
-		res.redirect(redirect);
-		return;
+	var split = req.query.token.split('|'),
+		sign = split[0]
+		email = (new Buffer(split[1], 'hex')).toString();
+
+	if (sign == crypto.createHmac('sha1', process.env.HASH_SECRET).update(email).digest('hex')) {
+		console.log(email + " logged in from email.");
+
+		User.findOrAddByEmail(req.session.user)(function (user) {
+			req.session.user = user.id;
+			res.redirect('/');			
+		});
+	} else {
+		console.log(email + " invalid login, unmatching sign.")
+		res.redirect('/');
 	}
-	res.redirect('/');
 };
 
 exports.sendLogin = function(req, res) {
 	var email = req.body.email,
-		token = crypto.createHmac('sha1', process.env.HASH_SECRET).update(email).digest('hex'),
+		token = crypto.createHmac('sha1', process.env.HASH_SECRET).update(email).digest('hex') + "|" + (new Buffer(email)).toString('hex'),
 		loginLink = process.env.HOST_PORT + "/login?token=" + token;
 
 	var request = ses.sendEmail({
@@ -58,6 +60,6 @@ exports.sendLogin = function(req, res) {
 }
 
 exports.logout = function (req, res) {
-
+	delete req.session.user;
 	res.redirect('/');
 };

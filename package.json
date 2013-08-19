@@ -10,7 +10,7 @@
       "deferred": "0.5.6",
       "mongoose": "3.6.15",
       "express-mongoose": "0.0.5",
-      "connect-mongo": ">0.1.0",
+      "connect-mongo": ">0.3.0",
       "jade": "0.27.2",
       "aws-sdk": ">0.1.0",
       "validator": "0.4.11",
