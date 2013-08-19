@@ -1,13 +1,10 @@
-var mongoose = require("mongoose"),
+var express = require('express'),
+	mongoose = require("mongoose"),
+	MongoStore = require('connect-mongo')(express),
 	mongo_uri = (process.env.MONGO_URI || "mongodb://localhost:27017/bvpuzzle"),
 	redis;
 
-exports.conf = {
-	db: "bvpuzzle",
-	host: (process.env.MONGO_HOST || "localhost"),
-	port: (process.env.MONGO_PORT || 27017)
-}
-
-// Connect to mongodb
+// Connect to mongodb - two connections due to two different use cases, but sue me.
 mongoose.connect(mongo_uri);
 
+exports.db = new MongoStore({url: mongo_uri});

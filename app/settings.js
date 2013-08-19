@@ -1,7 +1,8 @@
 var express = require("express"),
-	dbs = require("./dbconnect"),
+	dbconnect = require("./dbconnect"),
 	MongoStore = require('connect-mongo')(express),
-	passport = require("passport"),
+	mongoose = require("mongoose"),
+	User = mongoose.model('User'),
 	csrf = express.csrf();
 
 module.exports = function (app) {
@@ -19,12 +20,11 @@ module.exports = function (app) {
 		app.use(express.cookieParser());
 		app.use(express.limit('4mb'));
 
-		// Sessions use Redis since we don't really care if they expire when we restart.
-		// Worst that will happen is that everyone gets logged out.
+		// Sessions are pretty cool, right?
 		app.use(express.session({ 
-			secret: process.env.CLIENT_SECRET || "bvpuzzlez",
-			maxAge: new Date(Date.now() + (1000 * 60 * 60 * 24)), //One day max session time, or anytime redis restarts.
-			store: new MongoStore(dbs.conf)
+			secret: process.env.CLIENT_SECRET || process.env.HASH_SECRET,
+			maxAge: new Date(Date.now() + (1000 * 60 * 60 * 24 * 7)), //One week max session time
+			store: dbconnect.db
 		}));
 		
 		// Let's try and avoid cross site attacks if we can...
@@ -33,14 +33,23 @@ module.exports = function (app) {
 		var isProduction = process.env.NODE_ENV === 'production';
 
 		// Automatically make the token and user variables available to the template
-		// This must appear after app.use(passport.session());
 		app.use(function (req, res, next) {
+
 			app.locals.token = req.session._csrf;
-			app.locals.user = req.user;
 			app.locals.production = isProduction;
 			app.locals.messages = req.session.messages || {};
 			delete req.session.messages;
-			next();
+
+			if (req.session.user) {
+				User.findById(req.session.user, function (err, user) {
+					req.user = user;
+					app.locals.user = req.user;
+					next();
+				});
+			} else {
+				next();
+			}
+
 		});
 
 		// if you don't know what this does you're fired --mikey

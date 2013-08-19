@@ -11,7 +11,7 @@ mongoose.model("PuzzleCompletion", PuzzleCompletion);
 var PuzzleCompletionModel = mongoose.model("PuzzleCompletion")
 
 var User = new Schema({
-	name: String,
+	name: {type: String, default: "Anonymous"},
 	email: String,
 	created: {type: Date, default: Date.now},
 	accessed: {type: Date, default: Date.now},
