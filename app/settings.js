@@ -22,7 +22,7 @@ module.exports = function (app) {
 
 		// Sessions are pretty cool, right?
 		app.use(express.session({ 
-			secret: process.env.CLIENT_SECRET || process.env.HASH_SECRET,
+			secret: process.env.HASH_SECRET,
 			maxAge: new Date(Date.now() + (1000 * 60 * 60 * 24 * 7)), //One week max session time
 			store: dbconnect.db
 		}));
@@ -47,6 +47,8 @@ module.exports = function (app) {
 					next();
 				});
 			} else {
+				req.user = null;
+				app.locals.user = null;
 				next();
 			}
 

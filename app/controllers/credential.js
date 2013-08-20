@@ -60,6 +60,7 @@ exports.sendLogin = function(req, res) {
 }
 
 exports.logout = function (req, res) {
-	delete req.session.user;
+	req.session.user = null;
+	req.user = null;
 	res.redirect('/');
 };
