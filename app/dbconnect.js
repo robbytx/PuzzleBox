@@ -1,12 +1,10 @@
 var express = require('express'),
 	mongoose = require("mongoose"),
-	RedisStore = require('connect-redis')(express),
-	mongo_uri = (process.env.MONGOLAB_URI || "mongodb://localhost:27017/bvpuzzle"),
+	MongoStore = require('connect-mongo')(express),
+	mongo_uri = (process.env.MONGO_URI || "mongodb://localhost:27017/bvpuzzle"),
 	redis;
 
-// Connect to mongodb
+// Connect to mongodb - two connections due to two different use cases, but sue me.
 mongoose.connect(mongo_uri);
-redis = require("redis").createClient();
 
-exports.redis = redis;
-exports.redisStore = new RedisStore({client: redis});
+exports.db = new MongoStore({url: mongo_uri});
