@@ -1,7 +1,6 @@
 var credentialController = require('./controllers/credential'),
 	indexController = require('./controllers/indexController'),
 	puzzleController = require('./controllers/puzzles'),
-	passport = require('passport'),
 	helpers = require('./controllers/helpers');
 
 module.exports = function(app){
