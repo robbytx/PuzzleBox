@@ -1,0 +1,306 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "PuzzleBox deployment.",
+
+  "Parameters": {
+    "Environment": {
+      "Type": "String",
+      "Description": "Environment ('dev', 'qa', or 'prod')",
+      "Default": "dev",
+      "AllowedValues": ["dev", "qa", "prod"]
+    },
+    "KeyPairName": {
+      "Type": "String",
+      "Description": "Name of the ssh keypair to use",
+      "Default": "bv-puzzlebox"
+    },
+    "InstanceType": {
+      "Type": "String",
+      "Description": "EC2 instance type",
+      "Default": "t1.micro",
+      "AllowedValues": ["t1.micro", "m1.small"],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    },
+    "Version": {
+      "Type": "String",
+      "Description": "The version of puzzle box to install"
+    },
+    "Suffix": {
+      "Type": "String",
+      "Description": "The suffix to append to the name of stack resources (for testing purposes)",
+      "Default": ""
+    },
+    "S3Path": {
+      "Type": "String",
+      "Description": "The S3 path to find puzzle box artifacts in",
+      "Default": "nexus-private-artifacts/puzzlebox"
+    },
+    "DatadogApiKey": {
+      "Type": "String",
+      "Description": "The API key for Datadog",
+      "Default": "89ac45815f9d2c52f57aa0fb3ab1a1c1"
+    },
+    "VpcId": {
+      "Type": "String",
+      "Description": "The VpcId to create instances within"
+    },
+    "PublicSubnetId": {
+      "Type": "String",
+      "Description": "The id of the public subnet to create the ELB in"
+    },
+    "PrivateSubnetId": {
+      "Type": "String",
+      "Description": "The id of the private subnet to create the instance in"
+    },
+    "PrivateSubnetAZ": {
+      "Type": "String",
+      "Description": "The availability zone of the private subnet to create the instance in"
+    }
+  },
+
+  "Mappings": {
+    "RegionMap": {
+      "us-east-1": {
+        "AMI": "ami-3275ee5b"
+      },
+      "us-west-2": {
+        "AMI": "ami-ecbe2adc"
+      },
+      "eu-west-1": {
+        "AMI": "ami-44939930"
+      }
+    }
+  },
+
+  "Resources": {
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [ "ec2.amazonaws.com" ]
+              },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "DescribeTags",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [ "ec2:DescribeTags" ]
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "AttachVolume",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Action": [ "ec2:AttachVolume" ]
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": "ReadOnlyAccessToYumRepos",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Resource": [
+                    "arn:aws:s3:::nexus-private-artifacts",
+                    "arn:aws:s3:::nexus-private-artifacts/*",
+                    "arn:aws:s3:::cabertoss",
+                    "arn:aws:s3:::cabertoss/*"
+                  ],
+                  "Action": [ "s3:GetObject", "s3:ListBucket" ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [{"Ref": "InstanceRole"}]
+      }
+    },
+
+    "InstanceSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable access from everywhere within the VPC",
+        "VpcId": {"Ref": "VpcId"},
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "10.0.0.0/8"
+          }
+        ]
+      }
+    },
+
+    "InstanceVolume": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": {"Ref": "PrivateSubnetAZ"},
+        "Size": "1",
+        "VolumeType": "standard",
+        "Tags": [
+          { "Key": "Name",             "Value": { "Fn::Join": ["-", [
+                                                  {"Ref": "Environment"},
+                                                  { "Fn::Join": ["", [
+                                                    "puzzlebox",
+                                                    {"Ref": "Suffix"}
+                                                  ]] }
+                                                ]] }                                },
+          { "Key": "bv:nexus:service", "Value": "puzzlebox"                         },
+          { "Key": "bv:nexus:vpc",     "Value": { "Ref": "Environment" }            },
+          { "Key": "bv:nexus:team",    "Value": "puzzlebox@bazaarvoice.com" }
+        ]
+      }
+    },
+
+    "LaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "KeyName": {"Ref": "KeyPairName"},
+        "ImageId": { "Fn::FindInMap": [ "RegionMap", {"Ref": "AWS::Region"}, "AMI"] },
+        "IamInstanceProfile": {"Ref": "InstanceProfile"},
+        "InstanceType": {"Ref": "InstanceType"},
+        "InstanceMonitoring": "false",
+        "SecurityGroups": [{"Ref": "InstanceSecurityGroup"}],
+        "UserData": { "Fn::Base64": { "Fn::Join": [ "\n", [
+          "#!/bin/bash",
+          "set -o nounset",
+          "set -o errexit",
+          "set -o xtrace",
+
+          "echo $(date): 'Installing puzzle box...'",
+
+          { "Fn::Join": ["", [
+            "python -c '",
+              "import boto;",
+              "path = \"", { "Ref": "S3Path" }, "\";",
+              "bucket, path = path.split(\"/\", 1);",
+              "script = path + \"/scripts/install-", { "Ref": "Version" }, ".sh\";",
+              "print boto.connect_s3().get_bucket(bucket).get_key(script).get_contents_as_string()",
+            "' | ",
+            "bash -l -s -- ",
+            "  --version '",       { "Ref": "Version" },        "' ",
+            "  --volume-id '",     { "Ref": "InstanceVolume" }, "' ",
+            "  --suffix '",        { "Ref": "Suffix" },         "' ",
+            "  --datadog-key '",   { "Ref": "DatadogApiKey" },  "' "
+          ]]},
+
+          "echo $(date): 'Finished installing puzzle box'"
+        ]]}}
+      }
+    },
+
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "LaunchConfigurationName": {"Ref": "LaunchConfiguration"},
+        "VPCZoneIdentifier": [{"Ref": "PrivateSubnetId"}],
+        "AvailabilityZones": [{"Ref": "PrivateSubnetAZ"}],
+        "MinSize": "1",
+        "MaxSize": "1",
+        "LoadBalancerNames": [{"Ref": "LoadBalancer"}],
+        "Tags": [
+          { "Key": "Name",             "Value": { "Fn::Join": ["-", [
+                                                  { "Ref": "Environment" },
+                                                  { "Fn::Join": ["", [
+                                                    "puzzlebox",
+                                                    { "Ref": "Suffix" }
+                                                  ]] }
+                                                ]] },                                "PropagateAtLaunch": "true" },
+          { "Key": "bv:nexus:service", "Value": "puzzlebox",                     "PropagateAtLaunch": "true" },
+          { "Key": "bv:nexus:vpc",     "Value": { "Ref": "Environment" },            "PropagateAtLaunch": "true" },
+          { "Key": "bv:nexus:team",    "Value": "puzzlebox@bazaarvoice.com",         "PropagateAtLaunch": "true" }
+        ]
+      }
+    },
+
+    "ELBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "VpcId": {"Ref": "VpcId"},
+        "GroupDescription": "Enable access from within Nexus as well as from any Bazaarvoice offices",
+        "SecurityGroupIngress": [
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "10.0.0.0/8" },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "24.155.144.5/32" },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "80.169.157.170/32" },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "64.132.218.184/29" },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "206.80.5.2/32" },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "216.166.20.1/32" },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "216.166.20.30/32" }
+        ]
+      }
+    },
+
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "HealthCheck": {
+          "HealthyThreshold": "2",
+          "Interval": "30",
+          "Target": "TCP:8080",
+          "Timeout": "5",
+          "UnhealthyThreshold": "3"
+        },
+        "Listeners": [
+          {
+            "Protocol": "HTTP",
+            "LoadBalancerPort": "80",
+            "InstanceProtocol": "HTTP",
+            "InstancePort": "8080"
+          }
+        ],
+        "Subnets": [{"Ref": "PublicSubnetId"}],
+        "SecurityGroups": [{"Ref": "ELBSecurityGroup"}]
+      }
+    },
+
+    "RecordSet": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneName": "nexus.bazaarvoice.com.",
+        "Name": { "Fn::Join": [".", [
+                  { "Fn::Join": ["", [
+                    "puzzlebox",
+                    {"Ref": "Suffix"}
+                  ]]},
+                  {"Ref": "Environment"},
+                  {"Ref": "AWS::Region"},
+                  "nexus.bazaarvoice.com"
+                ]]},
+        "Type" : "A",
+        "AliasTarget" : {
+          "HostedZoneId" : { "Fn::GetAtt" : ["LoadBalancer", "CanonicalHostedZoneNameID"] },
+          "DNSName" : { "Fn::GetAtt" : ["LoadBalancer", "CanonicalHostedZoneName"] }
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+  }
+}
