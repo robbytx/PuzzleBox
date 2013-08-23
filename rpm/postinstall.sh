@@ -1,7 +1,8 @@
 #!/bin/sh
 if [ $1 -eq 1 ]; then
-  HOME=$(getent passwd "puzzlebox" | awk -v FS=: '{print $6}')
-  su -c "/bin/bash -c 'cd ${HOME}; npm install'" puzzlebox
+  cd $(getent passwd "puzzlebox" | awk -v FS=: '{print $6}')
+  npm install
+  chown -R puzzlebox:puzzlebox node_modules
 
   /sbin/chkconfig --add puzzlebox
 fi
