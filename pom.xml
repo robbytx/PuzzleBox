@@ -27,7 +27,6 @@
   </properties>
 
   <modules>
-    <!--<module>web</module>-->
     <module>rpm</module>
   </modules>
 </project>

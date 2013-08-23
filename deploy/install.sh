@@ -138,6 +138,10 @@ function setup_yum() {
   yum_install "${public_repo}/bv-nexus-public-artifacts-0.1.noarch.rpm"
   log "Done."
 
+  log "Enable the EPEL repo..."
+  yum-config-manager --enable epel
+  log "Done."
+
   # Install the version lock plugin so we can pin our RPMs to specific versions
   # and prevent them from being upgraded without explicit user action
   log "Installing the yum versionlock plugin..."
@@ -157,6 +161,12 @@ function install_cabertoss() {
 
   log "Installing the caber toss transmitter..."
   yum_install cabertoss-transmitter
+  log "Done."
+}
+
+function setup_mongo() {
+  log "Starting the mongo service"
+  service mongod start
   log "Done."
 }
 
@@ -290,6 +300,9 @@ Options:
 EOF
 }
 
+#-------------------------------------------------------------------------------
+# Main entry point.
+#-------------------------------------------------------------------------------
 function main() {
   local version=""
   local volume=""
@@ -331,7 +344,7 @@ function main() {
   create_dns_entry
 
   setup_yum
-
+  setup_mongo
   install_cabertoss
 
   install_puzzlebox  \
