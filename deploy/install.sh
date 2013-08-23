@@ -177,6 +177,7 @@ function install_puzzlebox() {
   local volume_id="${2}"
   local suffix="${3}"
   local datadog_key="${4:-}"
+  local environment="$(get_environment)"
 
   log "Installing the puzzlebox repo..."
   yum_install "puzzlebox-artifacts"
@@ -186,6 +187,13 @@ function install_puzzlebox() {
   yum_install "puzzlebox-${version}"
   yum versionlock "puzzlebox"
   log "Done."
+
+  local url="http://puzzlebox.${environment}.${region}.nexus.bazaarvoice.com"
+  sed -i "s/HOST_PORT=.*/HOST_PORT='${url}'/g" /etc/puzzlebox/env
+
+  if [[ "${environment}" != "prod" ]]; then
+    sed -i 's/NODE_ENV=.*/NODE_ENV="development"/g' /etc/puzzlebox/env
+  fi
 
   log "Attaching the EBS volume..."
   while ! /opt/aws/bin/ec2-attach-volume          \
