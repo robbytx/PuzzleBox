@@ -164,12 +164,6 @@ function install_cabertoss() {
   log "Done."
 }
 
-function setup_mongo() {
-  log "Starting the mongo service"
-  service mongod start
-  log "Done."
-}
-
 #-------------------------------------------------------------------------------
 # Install and configure PuzzleBox on the current instance.
 #
@@ -221,7 +215,7 @@ function install_puzzlebox() {
   cat - >>/etc/fstab <<EOF
 
 # device   mount point              type   options    dump  pass
-/dev/sdh   /var/lib/puzzlebox   ext4   defaults   0     0
+/dev/sdh   /var/lib/puzzlebox       ext4   defaults   0     0
 
 EOF
   log "Done."
@@ -232,6 +226,15 @@ EOF
   mkdir -p "/var/lib/puzzlebox/data"
   chown -R puzzlebox:puzzlebox "/var/lib/puzzlebox/data"
   log "Done."
+
+  log "Configuring mongodb..."
+  sed -i "s|dbpath =.*|dbpath = /var/lib/puzzlebox/data|g" /etc/mongodb.conf
+  log "Done."
+
+  log "Starting the mongo service..."
+  service mongod start
+  log "Done."
+
 
   log "Starting puzzlebox..."
   service puzzlebox start
@@ -344,7 +347,7 @@ function main() {
   create_dns_entry
 
   setup_yum
-  setup_mongo
+
   install_cabertoss
 
   install_puzzlebox  \
