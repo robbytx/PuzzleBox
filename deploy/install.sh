@@ -190,10 +190,10 @@ function install_puzzlebox() {
   log "Done."
 
   local url="http://puzzlebox.${environment}.${region}.nexus.bazaarvoice.com"
-  sed -i "s/HOST_PORT=.*/HOST_PORT='${url}'/g" /etc/puzzlebox/env
+  sed -i "s|HOST_PORT=.*|HOST_PORT='${url}'|g" /etc/puzzlebox/env
 
   if [[ "${environment}" != "prod" ]]; then
-    sed -i 's/NODE_ENV=.*/NODE_ENV="development"/g' /etc/puzzlebox/env
+    sed -i 's|NODE_ENV=.*|NODE_ENV="development"|g' /etc/puzzlebox/env
   fi
 
   log "Attaching the EBS volume..."
