@@ -177,6 +177,7 @@ function install_puzzlebox() {
   local volume_id="${2}"
   local suffix="${3}"
   local datadog_key="${4:-}"
+  local region="$(get_ec2_instance_region)"
   local environment="$(get_environment)"
 
   log "Installing the puzzlebox repo..."
@@ -197,7 +198,7 @@ function install_puzzlebox() {
 
   log "Attaching the EBS volume..."
   while ! /opt/aws/bin/ec2-attach-volume          \
-            --region "$(get_ec2_instance_region)" \
+            --region "${region}"                  \
             "${volume_id}"                        \
             -i "$(get_ec2_instance_id)"           \
             -d "/dev/sdh"; do
