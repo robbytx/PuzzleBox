@@ -9,14 +9,14 @@
 
   <groupId>com.bazaarvoice.puzzlebox</groupId>
   <artifactId>puzzlebox</artifactId>
-  <version>0.8-SNAPSHOT</version>
+  <version>0.8</version>
   <packaging>pom</packaging>
 
   <scm>
     <url>https://github.com/bazaarvoice/PuzzleBox</url>
     <connection>scm:git:git@github.com:bazaarvoice/PuzzleBox.git</connection>
     <developerConnection>scm:git:git@github.com:bazaarvoice/PuzzleBox.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>puzzlebox-0.8</tag>
   </scm>
 
   <name>${project.artifactId}</name>
