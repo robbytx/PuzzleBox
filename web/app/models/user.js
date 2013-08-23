@@ -28,9 +28,8 @@ User.statics.findOrAddByEmail = function findOrAddByEmail (email) {
 		if (user) {
 			user.accessed = Date.now();
 			return user.pSave();
-		} else {
+		} else {			
 			user = new (mongoose.model('User'))();
-			user.name = profile.displayName;
 			user.email = email;
 			return user.pSave();
 		}
