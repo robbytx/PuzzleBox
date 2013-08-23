@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# The environment that the server is running in
+#   development - Show stack traces on errors, don't send emails
+#   production - No stack traces on errors
+export NODE_ENV="production"
+
+# Secret used as salt for user session token creation, and for email
+export HASH_SECRET='shh...its a secret'
+
+# The URL to the server.  Used when generating login emails
+export HOST_PORT='http://localhost:5000'

@@ -1,0 +1,9 @@
+/var/log/puzzlebox/*log {
+  daily
+  rotate 30
+  copytruncate
+  delaycompress
+  compress
+  notifempty
+  missingok
+}
