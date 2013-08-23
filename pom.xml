@@ -13,9 +13,9 @@
   <packaging>pom</packaging>
 
   <scm>
-    <url>https://github.com/bazaarvoice/puzzlebox</url>
-    <connection>scm:git:git@github.com:bazaarvoice/puzzlebox.git</connection>
-    <developerConnection>scm:git:git@github.com:bazaarvoice/puzzlebox.git</developerConnection>
+    <url>https://github.com/bazaarvoice/PuzzleBox</url>
+    <connection>scm:git:git@github.com:bazaarvoice/PuzzleBox.git</connection>
+    <developerConnection>scm:git:git@github.com:bazaarvoice/PuzzleBox.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 
