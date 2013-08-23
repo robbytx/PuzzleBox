@@ -262,7 +262,7 @@
         "HealthCheck": {
           "HealthyThreshold": "2",
           "Interval": "30",
-          "Target": "TCP:8080",
+          "Target": "TCP:5000",
           "Timeout": "5",
           "UnhealthyThreshold": "3"
         },
@@ -271,7 +271,7 @@
             "Protocol": "HTTP",
             "LoadBalancerPort": "80",
             "InstanceProtocol": "HTTP",
-            "InstancePort": "8080"
+            "InstancePort": "5000"
           }
         ],
         "Subnets": [{"Ref": "PublicSubnetId"}],
