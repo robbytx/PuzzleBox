@@ -238,6 +238,7 @@ EOF
 
   log "Configuring mongodb..."
   sed -i "s|dbpath =.*|dbpath = /var/lib/puzzlebox/data|g" /etc/mongodb.conf
+  echo "smallfiles = true" >> /etc/mongodb.conf
   log "Done."
 
   log "Starting the mongo service..."
