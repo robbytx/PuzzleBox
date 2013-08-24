@@ -233,7 +233,7 @@ EOF
   mkdir -p "/var/lib/puzzlebox"
   mount "/var/lib/puzzlebox"
   mkdir -p "/var/lib/puzzlebox/data"
-  chown -R puzzlebox:puzzlebox "/var/lib/puzzlebox/data"
+  chown -R mongodb:puzzlebox "/var/lib/puzzlebox/data"
   log "Done."
 
   log "Configuring mongodb..."
@@ -243,7 +243,6 @@ EOF
   log "Starting the mongo service..."
   service mongod start
   log "Done."
-
 
   log "Starting puzzlebox..."
   service puzzlebox start
