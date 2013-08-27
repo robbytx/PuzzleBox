@@ -1,0 +1,19 @@
+extends base
+
+block content
+	h2 The Bazaarvoice PuzzleBox
+
+	if user
+		h3 Welcome Back #{user.name}
+		p
+			a(href="/logout") Log Out
+		p
+			a(href="/puzzles") See all puzzles
+	else
+		h3 Enter your email address to log in
+		p We'll send you an email with your login information.
+		form(action="/send", method="POST")
+			input(name="_csrf", type="hidden", value=token)
+			label(for="email") Email Address:
+			input(name="email", type="text")
+			input(type="submit")
