@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+
+#-------------------------------------------------------------------------------
+# Emit an error message and then usage information and then exit the program.
+#-------------------------------------------------------------------------------
+function error() {
+  echo 1>&2 "ERROR: $@"
+}
+
+#-------------------------------------------------------------------------------
+# Emit an error message and then usage information and then exit the program.
+#-------------------------------------------------------------------------------
+function usage_error() {
+  error "$@"
+  echo 1>&2
+  usage
+  exit 1
+}
+
+#-------------------------------------------------------------------------------
+# Emit the program's usage to the console.
+#-------------------------------------------------------------------------------
+function usage() {
+    cat <<EOF
+Usage: ${0#./} [OPTION]...
+
+Options:
+  -h/--help
+      Display this help message.
+EOF
+}
+
+#-------------------------------------------------------------------------------
+# Main program.
+#-------------------------------------------------------------------------------
+function main() {
+  # Parse the arguments from the commandline.
+  while [[ ${#} -gt 0 ]]; do
+    case "${1}" in
+      -h|--help)              usage; exit 0;;
+      --)                     break;;
+      -*)                     usage_error "Unrecognized option ${1}";;
+    esac
+
+    shift
+  done
+
+  # Start the vagrant VM
+  vagrant up
+
+  # Launch the application server
+  vagrant ssh --command="
+    killall node 2>/dev/null
+
+    cd ~/PuzzleBox
+    npm config set color false
+    npm install >/dev/null
+
+    export NODE_ENV='development'
+    export HOST_PORT='http://localhost:5000'
+    export HASH_SECRET='shh...its a secret'
+
+    nodemon --debug -L app
+  " </dev/null || (
+    echo "Killing server..."
+    vagrant ssh --command="killall node"
+  )
+}
+
+main "${@:-}"

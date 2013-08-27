@@ -1,0 +1,91 @@
+#!/bin/bash
+
+#
+# PuzzleBox
+#
+# chkconfig: 2345 89 9
+# description: puzzlebox
+
+source /etc/rc.d/init.d/functions
+
+[[ -e "/etc/puzzlebox/env" ]] && source "/etc/puzzlebox/env"
+
+####
+#### The following options can be overridden in /etc/puzzlebox/env
+####
+
+# The location that the pid file should be written to
+PIDFILE=${PIDFILE:="/var/run/puzzlebox/puzzlebox.pid"}
+
+# The location that the lock file should be written to
+LOCKFILE=${LOCKFILE:="/var/lock/subsys/puzzlebox"}
+
+# The location that the log file should be written to
+LOGFILE=${LOGFILE:="/var/log/puzzlebox/puzzlebox.log"}
+
+# The user to run puzzlebox as
+USER=${USER:="puzzlebox"}
+
+HOME=$(getent passwd "${USER}" | awk -v FS=: '{print $6}')
+
+# The return value from invoking the script
+RETVAL=0
+
+start() {
+  echo -n $"Starting PuzzleBox... "
+
+  local cmd="cd ${HOME}; node app >> '${LOGFILE}' 2>&1 </dev/null &"
+  daemon --user "${USER}" --check "puzzlebox" --pidfile "${PIDFILE}" "${cmd}"
+
+  local pid="$(ps ax | grep "node app" | grep -v "grep" | awk '{print $1}')"
+  [ -n ${pid} ] && echo ${pid} > "${PIDFILE}"
+  RETVAL=$?
+  [ $RETVAL -eq 0 ] && touch $LOCKFILE
+
+  echo
+}
+
+stop() {
+  echo -n $"Stopping PuzzleBox... "
+  killproc -p $PIDFILE puzzlebox
+  RETVAL=$?
+  echo
+  [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+}
+
+restart() {
+  stop
+  start
+}
+
+checkstatus() {
+  status -p "$PIDFILE" puzzlebox
+  RETVAL=$?
+}
+
+condrestart() {
+  [ -e "$LOCKFILE" ] && restart || :
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  status)
+    checkstatus
+    ;;
+  restart)
+    restart
+    ;;
+  condrestart)
+    condrestart
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+    exit 1
+esac
+
+exit $RETVAL
