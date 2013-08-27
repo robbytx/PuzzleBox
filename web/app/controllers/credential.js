@@ -12,7 +12,7 @@ exports.doLogin = function(req, res) {
 	if (sign == crypto.createHmac('sha1', process.env.HASH_SECRET).update(email).digest('hex')) {
 		console.log(email + " logged in from email.");
 
-		User.findOrAddByEmail(req.session.user)(function (user) {
+		User.findOrAddByEmail(email)(function (user) {
 			req.session.user = user.id;
 			res.redirect('/');
 		});
