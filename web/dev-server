@@ -62,7 +62,7 @@ function main() {
     export HOST_PORT='http://localhost:5000'
     export HASH_SECRET='shh...its a secret'
 
-    nodemon app
+    nodemon --debug -L app
   " </dev/null || (
     echo "Killing server..."
     vagrant ssh --command="killall node"
