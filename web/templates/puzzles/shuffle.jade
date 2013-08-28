@@ -1,0 +1,130 @@
+extends ../puzzle
+
+block description
+  h3  The Implementation
+  p.
+    Assume someone has implemented a card shuffling algorithm as follows:
+  pre
+    | deck := an array of cards ordered top-to-bottom
+    | for (position <- 0 until deck.size):
+    |     swap_position := random_integer_less_than(deck.size)
+    |     if (position != swap_position):
+    |         deck.swap(position, swap_position)
+  p.
+    In words, the algorithm iterates through the deck top-to-bottom, and at
+    each position, it considers whether to swap the card at that position with
+    another card in the deck.  The swap position in each iteration is chosen
+    randomly, with equal probability, among all positions in the deck.  If the
+    swap position is not the current position, then the card at the current position
+    is swapped with the card at swap position, and the algorithm proceeds to the
+    next position in the deck.
+
+  h3  An Illustration
+  p.
+    Assume we've got a deck consisting of three cards [ A, B, C ], so:
+  ul
+    li  A is on top (position 0),
+    li  B is in the middle (position 1), and
+    li  C is on bottom (position 2) initially.
+
+  p.
+    The following tables demonstrate the possible transformations of the deck
+    applied by the shuffle algorithm:
+
+  style
+    .example {margin: 1em;}
+    .example td, .example th {border: 1px solid black; text-align: center; padding: 0.2em;}
+
+  table.example
+    tr
+      th position
+      th initial state
+      th deck.swap(0, 1)
+      th deck.swap(1, 2)
+      th deck.swap(2, 0)
+      th final state
+    tr
+      td 0
+      td A
+      td B
+      td B
+      td A
+      td A
+    tr
+      td 1
+      td B
+      td A
+      td C
+      td C
+      td C
+    tr
+      td 2
+      td C
+      td C
+      td A
+      td B
+      td B
+
+  table.example
+    tr
+      th position
+      th initial state
+      th deck.swap(0, 1)
+      th no swap occurs
+      th deck.swap(2, 1)
+      th final state
+    tr
+      td 0
+      td A
+      td B
+      td B
+      td B
+      td B
+    tr
+      td 1
+      td B
+      td A
+      td A
+      td C
+      td C
+    tr
+      td 2
+      td C
+      td C
+      td C
+      td A
+      td A
+
+  h4  Note of Interest
+  p.
+    For this example deck, the probability of card B being on top of deck (position 0)
+    in the final state is not one in three, but actually 0.37037 or 37.037%.
+
+  h3  The Puzzle
+  p.
+    Assume we have a standard 52 card deck that is initially ordered by suit and rank, highest to lowest, so:
+  ul
+    li  #{puzzle.getSuitName(0)} &ndash;
+      for card in puzzle.cardsBySuit[0]
+        !{" " + puzzle.getCardName(card) + ", "}
+      span followed by:
+    li  #{puzzle.getSuitName(1)} &ndash;
+      for card in puzzle.cardsBySuit[1]
+        !{" " + puzzle.getCardName(card) + ", "}
+      span and then:
+    li  #{puzzle.getSuitName(2)} &ndash;
+      for card in puzzle.cardsBySuit[2]
+        !{" " + puzzle.getCardName(card) + ", "}
+      span and finally:
+    li  #{puzzle.getSuitName(3)} &ndash;
+      for card in puzzle.cardsBySuit[3]
+        !{" " + puzzle.getCardName(card) + (card < 51 ? ", " : ".")}
+
+  p.
+    After the shuffle algorithm is applied to the deck once, what is the probability
+    that your card, the !{puzzle.yourCardName}, is at the top of the deck (position 0)?
+
+  h4 Your Answer
+  p.
+    Answers given as a raw probability between 0 and 1 must be accurate to five decimal places, e.g. 0.12345.
+    Alternatively, answers may be expressed as a percentage, which must be accurate to three decimal places, e.g. 12.345%.
