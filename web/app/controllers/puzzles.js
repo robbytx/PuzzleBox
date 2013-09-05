@@ -4,10 +4,7 @@ exports.renderIndex = function(req, res) {
 	var completed = [], uncompleted = [],
 		completions = req.user.getCompletions();
 
-	console.log(completions);
-
 	for (var i in PuzzleMaster.puzzles) {
-		console.log(PuzzleMaster.puzzles[i].puzzid, completions.indexOf(PuzzleMaster.puzzles[i].puzzid))
 		if (completions.indexOf(PuzzleMaster.puzzles[i].puzzid) > -1) {
 			completed.push(PuzzleMaster.puzzles[i]);
 		} else {

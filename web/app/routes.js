@@ -1,5 +1,6 @@
 var credentialController = require('./controllers/credential'),
 	profileController = require('./controllers/profile'),
+	leaderboardController = require('./controllers/leaderboard'),
 	indexController = require('./controllers/indexController'),
 	puzzleController = require('./controllers/puzzles'),
 	helpers = require('./controllers/helpers');
@@ -12,6 +13,9 @@ module.exports = function(app){
 	// Profile Info
 	app.get('/profile', profileController.showProfile);
 	app.post('/profile', profileController.submitProfile);
+
+	// Leaderboard Info
+	app.get('/leaderboard', leaderboardController.showLeaderboard)
 
 	// Puzzlllleeeessss
 	app.get('/puzzles', helpers.requireLogin, puzzleController.renderIndex);

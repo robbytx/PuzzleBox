@@ -1,0 +1,14 @@
+extends base
+
+block content
+	h2 Leaderboard
+
+	table
+		each rank in users
+			tr
+				td= rank.name
+				td= rank.score
+
+	p
+		a(href="/") Back to index...
+		
