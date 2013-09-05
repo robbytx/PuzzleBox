@@ -1,0 +1,15 @@
+extends base
+
+block content
+	h2 Edit Profile
+
+	p Please add a name in order to be listed on the leaderboards.
+
+	form(method="POST")
+		label Name:
+		input(name="_csrf", type="hidden", value=token)
+		input(name="name", type="text", value=user.name)
+		input(type="submit")
+
+	p
+		a(href="/") Back...

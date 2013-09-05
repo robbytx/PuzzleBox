@@ -5,6 +5,13 @@ block content
 
 	if user
 		h3 Welcome Back #{user.name}
+		if add_name
+			p 
+				a(href="/profile") Add your name
+				|  to appear on the leaderboards!
+		else
+			p
+				a(href="/profile") Change your name
 		p
 			a(href="/logout") Log Out
 		p
