@@ -1,0 +1,57 @@
+extends ../puzzle
+
+block description
+  h3  The Scenario
+  p.
+    Suppose we have an application that uses a memory heap to store the bulk of its working data set.
+    The application's heap is comprised of many different objects, each of which naturally occupies some
+    fixed-size number of bytes, and each of which can reference zero or more other objects in the heap.
+  p.
+    To manage its heap usage, the application uses a compacting garbage collector that periodically
+    moves all "live" objects into a contiguous space, thereby reclaiming all the remaining space in the heap
+    for future use by the application.  An object is considered "live" by the collector if there
+    is a direct reference to the object from the application's execution thread(s), or if the object is
+    referenced by another live object.
+  p.
+    Consequently, when all references to a particular object are removed, that object is no longer live
+    and the bytes occupied by that object are eligible to be reclaimed on the next garbage collection cycle.
+    Furthermore, if that object held the only reference to other objects in the heap, then those objects
+    would also no longer be live, and the bytes occupied by those objects would be eligible to be reclaimed.
+    Similarly, if those objects held the only reference(s) to other objects in the heap, then the other
+    objects would be eligible to be reclaimed as well, and so on.  Therefore, when all references to
+    a particular object are removed, then the number of bytes that can be reclaimed is the sum of the
+    number of bytes occupied by the object AND by all objects that would no longer be referenced by another
+    live object or referenced directly.
+  h3  Example
+  p.
+    Suppose our heap contains seven objects as described in JSON below:
+  pre
+    | {
+    |   "A": { "bytes": 4, "references": [ "B", "C" ] },
+    |   "B": { "bytes": 8, "references": [ "A", "D" ] },
+    |   "C": { "bytes": 4, "references": [ "D" ] },
+    |   "D": { "bytes": 8, "references": [ "C", "E", "F" ] },
+    |   "E": { "bytes": 4, "references": [] },
+    |   "F": { "bytes": 4, "references": [] },
+    |   "G": { "bytes": 12, "references": [ "C" ] }
+    | }
+  p.
+    As seen above, A references B and C, each of which reference D, and B refers back to A; D references E and F and also back to C, while G references C only.
+    For this example, let's assume that our application has direct references to A and G only.
+  ul
+    li  If we remove the application's reference to A, then we can reclaim A and B, since no other objects reference them.  This would yield 4+8 = 12 bytes.
+    li  If we remove A's reference to B, then we can only reclaim B, yielding 8 bytes, since the application still references A and D is still referenced by C,
+      | which is referenced by both A and G, which are live.
+    li  If we remove all references to C, then we can only reclaim B, yielding 4 bytes, since D is still referenced by B, which is referenced by A, which is live.
+    li  If we remove all references to D, then we can also reclaim E and F, but not C, yielding 8+4+4 = 16 bytes.
+    li  If we remove D's reference to E or to F, then we can only reclaim 4 bytes each, since neither of those objects reference any others.
+    li  If we remove the application's reference to G, then we can only reclaim G, yielding 12 bytes, since C is still referenced by A, which is live.
+  p.
+    As a result, the most we can reclaim in this example by de-referencing any one object in the heap is 16 bytes, by removing all references to D.
+
+  h3  The Puzzle
+  p.
+    Now, suppose our application's heap is in the state defined in <a href="http://puzzlebox-artifacts.s3-website-us-east-1.amazonaws.com/heapgc/!{puzzle.filename}">this file</a>
+    and our application's only execution thread has direct references to objects !{puzzle.directReferences}.
+    If we could remove all references to only one object in the heap, what is the maximum number of bytes
+    that we could reclaim?
